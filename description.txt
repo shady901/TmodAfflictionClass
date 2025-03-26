@@ -1,0 +1,2 @@
+Affliction class by cleanser, 
+focused on dealing damage over time, instead of contact damage,

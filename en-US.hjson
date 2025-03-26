@@ -1,0 +1,29 @@
+Mods: {
+	AfflictionClass: {
+		Projectiles: {
+			TestProjectile.DisplayName: Test Projectile
+			FlaskAttemptProjectile.DisplayName: Flask Attempt Projectile
+		}
+
+		Items: {
+			TestSword: {
+				Tooltip: ""
+				DisplayName: Test Sword
+			}
+
+			FlaskAttempt: {
+				Tooltip: ""
+				DisplayName: Flask Attempt
+			}
+		}
+
+		Buffs: {
+			RottingFleshDebuff: {
+				Description: Mods.AfflictionClass.Buffs.RottingFleshDebuff.Description
+				DisplayName: Rotting Flesh Debuff
+			}
+		}
+
+		DamageClasses.AfflictionDamageClass.DisplayName: Damage
+	}
+}
