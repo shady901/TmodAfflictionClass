@@ -42,7 +42,7 @@ namespace AfflictionClass.Content.Items.Types
             // You can add more types later:
             // if (IsCorrosion)
             //     damage = (int)(damage * (1f + modPlayer.corrosionDamage));
-        }
+        } 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             var modPlayer = player.GetModPlayer<AfflictionPlayer>();
