@@ -13,19 +13,22 @@ using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using AfflictionClass.Content.Players;
 using System.Security.AccessControl;
-using AfflictionClass.Content.Buffs.RottingFleshDebuff;
+using AfflictionClass.Content.Buffs.CorrosiveDebuff;
+using AfflictionClass.Content.Projectiles.ProjectileTypes;
+using AfflictionClass.Content.Helper;
+using AfflictionClass.Content.Enums;
 
 namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
 {
-    public class CorrosiveVialProjectile :ModProjectile
+    public class CorrosiveVialProjectile :AfflictionBaseProjectile
     {
-        
+        public override DamageTypeEnum DamageType { get; set; } = DamageTypeEnum.Corrosive;
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
         }
-
+        
         public override void SetDefaults()
         {
             Projectile.damage = 0;
@@ -43,8 +46,7 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
         public override void OnSpawn(IEntitySource source)
         {
             Projectile.damage = 1;
-          //  Main.NewText($"[Debug] Spawned {Projectile.Name} with forced damage = {Projectile.damage}");
-
+        
         }
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
@@ -72,10 +74,10 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
         //on kill as in the projectile ends
         public override void OnKill(int timeLeft)
         {
-            Player player = Main.player[Projectile.owner];
-            float plagueBonus = player.GetModPlayer<AfflictionPlayer>().plagueDamage;
+            Player player = Main.player[Projectile.owner];           
+            int scaledDotDamage = AfflictionHelper.ApplyModifiersToDamage(Projectile.originalDamage, player,DamageType);
 
-            int scaledDotDamage = (int)(Projectile.originalDamage * (1f + plagueBonus));
+
             float aoeRadius = 100f;
 
 
@@ -98,16 +100,16 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
                     float dist = Vector2.Distance(target.Center, Projectile.Center);
                     if (dist <= radius)
                     {
-                        if (target.HasBuff<RottingFleshDebuff>())
+                        if (target.HasBuff<CorrosiveDebuff>())
                         {
-                            if (target.GetGlobalNPC<AfflictionGlobalNPC>().rottingFleshStack < 10)
+                            if (target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveStack < 10)
                             {
-                                target.GetGlobalNPC<AfflictionGlobalNPC>().rottingFleshStack += 1;
+                                target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveStack += 1;
                             }
                         } 
                         
-                        target.GetGlobalNPC<AfflictionGlobalNPC>().rottingFleshDebuffDamage = dotDamage;
-                        target.AddBuff(ModContent.BuffType<RottingFleshDebuff>(), 300);
+                        target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveDebuffDamage = dotDamage;
+                        target.AddBuff(ModContent.BuffType<CorrosiveDebuff>(), 300);
                         
                         target.SimpleStrikeNPC(1, 0, false, default);
                     }

@@ -3,24 +3,25 @@ Mods: {
 		Projectiles: {
 			TestProjectile.DisplayName: Test Projectile
 			FlaskAttemptProjectile.DisplayName: Flask Attempt Projectile
+			CorrosiveVialProjectile.DisplayName: Corrosive Vial Projectile
 		}
 
 		Items: {
-			TestSword: {
-				Tooltip: ""
-				DisplayName: Test Sword
+			CorrosiveVial: {
+				DisplayName: Corrosive Vial
+				Tooltip: Inflicts a stacking Corrosive Debuff
 			}
 
-			FlaskAttempt: {
-				Tooltip: ""
-				DisplayName: Flask Attempt
+			CorrosiveEssence: {
+				Tooltip: 10% Corrosive Damage
+				DisplayName: Corrosive Essence
 			}
 		}
 
 		Buffs: {
-			RottingFleshDebuff: {
-				Description: Mods.AfflictionClass.Buffs.RottingFleshDebuff.Description
-				DisplayName: Rotting Flesh Debuff
+			CorrosiveDebuff: {
+				DisplayName: Corrosive Debuff
+				Description: Mods.AfflictionClass.Buffs.CorrosiveDebuff.Description
 			}
 		}
 

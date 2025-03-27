@@ -8,9 +8,9 @@ using Terraria.ModLoader;
 using Terraria;
 using AfflictionClass.Content.NPCs;
 
-namespace AfflictionClass.Content.Buffs.RottingFleshDebuff
+namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
 {
-    public class RottingFleshDebuff : ModBuff
+    public class CorrosiveDebuff : ModBuff
     {
         public override void SetStaticDefaults()
         {
@@ -33,27 +33,27 @@ namespace AfflictionClass.Content.Buffs.RottingFleshDebuff
             HandleSplatterEffect(npc, buffIndex);
 
             // Increment the DoT tick timer
-            aff.rottingFleshDebuffTickTimer++;
+            aff.CorrosiveNPCData.corrosiveDebuffTickTimer++;
         }
 
         // Method to handle DoT damage application
         private void HandleDotDamage(NPC npc, AfflictionGlobalNPC aff)
         {
-            if (aff.rottingFleshDebuffTickTimer >= 60)
+            if (aff.CorrosiveNPCData.corrosiveDebuffTickTimer >= 60)
             {
-                if (aff.rottingFleshDebuffDamage > 0)
+                if (aff.CorrosiveNPCData.corrosiveDebuffTickTimer > 0)
                 {
 
-                    npc.SimpleStrikeNPC((int)(aff.rottingFleshDebuffDamage * HandleRottingFleshStack(aff)), 0, false, default); // Apply DoT damage
+                    npc.SimpleStrikeNPC((int)(aff.CorrosiveNPCData.corrosiveDebuffDamage * HandleRottingFleshStack(aff)), 0, false, default); // Apply DoT damage
                 }
-                aff.rottingFleshDebuffTickTimer = 0; // Reset the tick timer after damage is applied
+                aff.CorrosiveNPCData.corrosiveDebuffTickTimer = 0; // Reset the tick timer after damage is applied
             }
         }
         //handles the stack and returns a multiplier, every 3 will return a 20% damage increase 
         private float HandleRottingFleshStack(AfflictionGlobalNPC aff)
         {
             // Calculate the number of full stacks (every 3) 
-            int fullStacks = aff.rottingFleshStack / 3;
+            int fullStacks = aff.CorrosiveNPCData.corrosiveStack / 3;
 
             // Calculate the multiplier (20% per stack of 3)
             float multiplier = 1f + fullStacks * 0.2f;
