@@ -10,6 +10,7 @@ namespace AfflictionClass.Content.Enums
     {
         Plague,
         Corrosive,
-        Generic
+        Generic,
+        Void
     }
 }

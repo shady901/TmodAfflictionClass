@@ -1,31 +1,96 @@
-﻿using AfflictionClass.Content.Enums;
+﻿using AfflictionClass.Content.Buffs.DebuffAgitated;
+using AfflictionClass.Content.Enums;
 using AfflictionClass.Content.Players;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
 using Terraria.ModLoader;
-
+using Terraria;
+using AfflictionClass.Content.Buffs.Amp;
+using AfflictionClass.Content.Buffs.CorrosiveDebuff;
+using AfflictionClass.Content.NPCs;
+using Terraria.ID;
+using AfflictionClass.Content.Buffs.Void;
+using AfflictionClass.Content.Config;
+using System;
 
 namespace AfflictionClass.Content.Helper
 {
     public static class AfflictionHelper
     {
-
         public static int ApplyModifiersToDamage(int originalDamage, Player player, DamageTypeEnum damageType)
         {
-            AfflictionModifiers modifiers = player.GetModPlayer<AfflictionPlayer>().GetDamageModifiers(damageType);
-            
-            return (int)((originalDamage*modifiers.damagePercent)+ modifiers.flatDamage);
+            AfflictionModifiers modifiers = GetAfflictionModifiers(player, damageType);
+            return (int)((originalDamage * modifiers.damagePercent) + modifiers.flatDamage);
         }
 
         public static AfflictionModifiers GetAfflictionModifiers(Player player, DamageTypeEnum damageType)
-        { 
+        {
             return player.GetModPlayer<AfflictionPlayer>().GetDamageModifiers(damageType);
+        }
 
+        public static float GetDebuffAmplifyMultiplier(NPC npc, Player player, DamageTypeEnum damageType)
+        {
+            float amplify = GetAfflictionModifiers(player, damageType).debuffAmplifyPercent;
+
+            if (npc.HasBuff(ModContent.BuffType<AmpDebuff>()))
+                amplify += (AfflictionConstants.BaseDebuffAmpPercent-1f);
+
+            return amplify;
+        }
+
+        public static float GetTickRateMultiplier(NPC npc, Player player, DamageTypeEnum damageType)
+        {
+            var modifiers = GetAfflictionModifiers(player, damageType);
+
+            float tickRate = modifiers.dotTickRatePercent * modifiers.tickRateGlobalMultiplier;
+
+            if (npc.HasBuff(ModContent.BuffType<AgitatedDebuff>()))
+                tickRate += (AfflictionConstants.AgitatedTickBoostMultiplier-1f);
+
+            return tickRate;
+        }
+
+        public static void AddVoidStackAndCheckExplosion(NPC npc, Player player, int baseDamage, bool forceCrit = false, float ampOverride = -1f)
+        {
+            var aff = npc.GetGlobalNPC<AfflictionGlobalNPC>();
+            var dotMap = aff.voidNPCData.VoidDOTs;
+
+            // Determine amp and crit
+            float amp = ampOverride > 0 ? ampOverride : AfflictionHelper.GetDebuffAmplifyMultiplier(npc, player, DamageTypeEnum.Void);
+            bool crit = forceCrit || AfflictionCritHelper.RollCrit(player, DamageTypeEnum.Void);
+            float critMulti = AfflictionCritHelper.GetCritMultiplier(player, DamageTypeEnum.Void);
+            int voidpen = AfflictionHelper.GetPen(player, DamageTypeEnum.Void);
+            
+            if (!dotMap.TryGetValue(player.whoAmI, out var dot))
+            {
+                dot = new VoidDOTInstance(player.whoAmI, baseDamage, crit, amp, critMulti, npc.defense, voidpen);
+                dotMap[player.whoAmI] = dot;
+            }
+
+            var stackvalue = dot.AddStack(baseDamage, crit, amp, critMulti, npc.defense,voidpen);
+           
+         
+            int totalDamage = dot.GetTotalDamage();
+            float effectiveDef = Math.Max(0, npc.defense - voidpen);
+            totalDamage -= (int)(effectiveDef * 0.5f);
+            if (totalDamage >= npc.life)
+            {
+                // 💥 Instant kill
+                VoidDebuff.DoVoidDotDamage(npc, totalDamage, player.whoAmI);
+
+                for (int i = 0; i < 10; i++)
+                Dust.NewDust(npc.position, npc.width, npc.height, DustID.Shadowflame);
+                dotMap.Remove(player.whoAmI);
+            }
+            else
+            {              
+                    CombatText.NewText(npc.Hitbox, new Microsoft.Xna.Framework.Color(255, 50, 255), stackvalue, dramatic: crit);                       
+            }
+            
+        }
+
+        private static int GetPen(Player player, DamageTypeEnum damageType)
+        {
+            var modifiers = GetAfflictionModifiers(player, damageType);
+            return modifiers.pen;
         }
     }
 }

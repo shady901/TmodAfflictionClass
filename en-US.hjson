@@ -16,12 +16,32 @@ Mods: {
 				Tooltip: 10% Corrosive Damage
 				DisplayName: Corrosive Essence
 			}
+
+			VoidSword: {
+				DisplayName: Void Sword
+				Tooltip: ""
+			}
 		}
 
 		Buffs: {
 			CorrosiveDebuff: {
 				DisplayName: Corrosive Debuff
 				Description: Mods.AfflictionClass.Buffs.CorrosiveDebuff.Description
+			}
+
+			AmpDebuff: {
+				DisplayName: Amp Debuff
+				Description: Mods.AfflictionClass.Buffs.AmpDebuff.Description
+			}
+
+			AgitatedDebuff: {
+				DisplayName: Agitated Debuff
+				Description: Mods.AfflictionClass.Buffs.AgitatedDebuff.Description
+			}
+
+			VoidDebuff: {
+				DisplayName: Void Debuff
+				Description: Mods.AfflictionClass.Buffs.VoidDebuff.Description
 			}
 		}
 

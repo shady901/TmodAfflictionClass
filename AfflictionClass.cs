@@ -11,5 +11,8 @@ namespace AfflictionClass
 	public class AfflictionClass : Mod
 	{
 
+
+
+
 	}
 }

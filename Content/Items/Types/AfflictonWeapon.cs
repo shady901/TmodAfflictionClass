@@ -26,7 +26,11 @@ namespace AfflictionClass.Content.Items.Types
                 line.Text = $"{split.First()} {GetTypeName()} {split.Last()}";
             }
         }
-
+        public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            base.OnHitNPC(player, target, hit, damageDone); // This allows derived classes like VoidSword to work
+                                                            // or remove this override entirely if it's not needed
+        }
         private string GetTypeName()
         {
             return DamageType == DamageTypeEnum.Plague ? "Plague" :

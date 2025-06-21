@@ -1,71 +1,110 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria;
 using AfflictionClass.Content.NPCs;
+using AfflictionClass.Content.DamageClasses;
+using static Terraria.NPC;
+using AfflictionClass.Content.Players;
+using AfflictionClass.Content.Enums;
+using AfflictionClass.Content.Buffs;
+using AfflictionClass.Content.Buffs.DebuffAgitated;
+using static System.Net.Mime.MediaTypeNames;
+using AfflictionClass.Content.Buffs.Amp;
+using AfflictionClass.Content.Helper;
+using AfflictionClass.Content.Config;
+
 
 namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
 {
     public class CorrosiveDebuff : ModBuff
     {
+
         public override void SetStaticDefaults()
         {
-            Main.debuff[Type] = true; // It’s a debuff
-            Main.buffNoSave[Type] = true; // Doesn’t persist on save
-            Main.buffNoTimeDisplay[Type] = false; // Show the timer
+            Main.debuff[Type] = true;
+            Main.buffNoSave[Type] = true;
+            Main.buffNoTimeDisplay[Type] = false;
         }
 
         public override void Update(NPC npc, ref int buffIndex)
         {
             var aff = npc.GetGlobalNPC<AfflictionGlobalNPC>();
-            
-            // Handle the DoT damage ticking
-            HandleDotDamage(npc, aff);
 
-            // Handle the visual effects (dust and lighting)
+            // Only do damage server-side
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                HandleDotDamage(npc, aff);
+            }
+
             HandleVisualEffects(npc);
-
-            // Optional: Handle splatter effect on tick
             HandleSplatterEffect(npc, buffIndex);
-
-            // Increment the DoT tick timer
-            aff.CorrosiveNPCData.corrosiveDebuffTickTimer++;
         }
-
-        // Method to handle DoT damage application
         private void HandleDotDamage(NPC npc, AfflictionGlobalNPC aff)
         {
-            if (aff.CorrosiveNPCData.corrosiveDebuffTickTimer >= 60)
+            UpdateCorrosiveDotTimers(npc, aff);
+        }
+        private void UpdateCorrosiveDotTimers(NPC npc, AfflictionGlobalNPC aff)
+        {
+            foreach (var kv in aff.CorrosiveNPCData.CorrosiveDOTs)
             {
-                if (aff.CorrosiveNPCData.corrosiveDebuffTickTimer > 0)
-                {
+                int playerID = kv.Key;
+                var dot = kv.Value;
+                var player = Main.player[playerID];
 
-                    npc.SimpleStrikeNPC((int)(aff.CorrosiveNPCData.corrosiveDebuffDamage * HandleRottingFleshStack(aff)), 0, false, default); // Apply DoT damage
-                }
-                aff.CorrosiveNPCData.corrosiveDebuffTickTimer = 0; // Reset the tick timer after damage is applied
+                if (dot.TimeLeft <= 0 || !player.active)
+                    continue;
+
+                dot.TickTimer++;
+                dot.TimeLeft--;
+
+                TryTriggerCorrosiveDot(npc, dot, playerID);
             }
         }
-        //handles the stack and returns a multiplier, every 3 will return a 20% damage increase 
-        private float HandleRottingFleshStack(AfflictionGlobalNPC aff)
+
+        private void TryTriggerCorrosiveDot(NPC npc, CorrosiveDOTInstance dot, int playerID)
         {
-            // Calculate the number of full stacks (every 3) 
-            int fullStacks = aff.CorrosiveNPCData.corrosiveStack / 3;
+            var player = Main.player[playerID];
 
-            // Calculate the multiplier (20% per stack of 3)
-            float multiplier = 1f + fullStacks * 0.2f;
+            float tickRateMultiplier = AfflictionHelper.GetTickRateMultiplier(npc, player, DamageTypeEnum.Corrosive);
+            int ticksNeeded = Math.Max(1, (int)(AfflictionConstants.CorrosiveBaseTickRate / tickRateMultiplier));
 
-            // Return the multiplier (up to a reasonable limit, say 1.6 for 3 full stacks)
-            return multiplier;
+            if (dot.TickTimer >= ticksNeeded)
+            {
+                dot.TickTimer = 0;
+
+                float amplify = AfflictionHelper.GetDebuffAmplifyMultiplier(npc, player, DamageTypeEnum.Corrosive);
+                int damage = (int)(dot.BaseDamage * HandleCorrosiveStack(dot.Stack) * amplify);
+
+                DoDotDamage(npc, damage, playerID);
+            }
+        }
+        public static void DoDotDamage(NPC npc, int damage, int playerID)
+        {
+            Player player = Main.player[playerID];
+
+            if (!player.active || player.dead)
+                return;
+
+            NPC.HitInfo hitInfo = npc.CalculateHitInfo(damage, 0, false, 0f);
+
+            hitInfo.HideCombatText = false;
+
+            // THIS is what actually registers DPS meter damage
+            player.ApplyDamageToNPC(npc, hitInfo.Damage, hitInfo.Knockback, hitInfo.HitDirection, hitInfo.Crit);
+            //registers damage dealt
+            Main.player[playerID].GetModPlayer<AfflictionPlayer>().CorrosiveDps.Register(damage);
         }
 
-        // Method to handle visual effects (dust and lighting)
+
+        private float HandleCorrosiveStack(int stack)
+        {
+            int fullStacks = stack / AfflictionConstants.CorrosiveStackDamageRatio;
+            return 1f + fullStacks * AfflictionConstants.CorrosiveStackMultiplier;
+        }
+
         private void HandleVisualEffects(NPC npc)
         {
-            // 🌿 Visual: Green plague mist and spores
             if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustDirect(npc.position, npc.width, npc.height, DustID.DungeonGreen);
@@ -74,11 +113,9 @@ namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
                 dust.noGravity = true;
             }
 
-            // 🌟 Light green glow pulse
-            Lighting.AddLight(npc.Center, 0.1f, 0.4f, 0.1f); // Subtle sickly glow
+            Lighting.AddLight(npc.Center, 0.1f, 0.4f, 0.1f);
         }
 
-        // Method to handle optional splatter effect
         private void HandleSplatterEffect(NPC npc, int buffIndex)
         {
             if (npc.buffTime[buffIndex] % 60 == 0 && Main.rand.NextBool(2))
@@ -86,6 +123,5 @@ namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
                 Gore.NewGore(npc.GetSource_FromThis(), npc.Center, npc.velocity * 0.2f, GoreID.Smoke1);
             }
         }
-
     }
 }

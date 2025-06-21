@@ -17,6 +17,7 @@ using AfflictionClass.Content.Buffs.CorrosiveDebuff;
 using AfflictionClass.Content.Projectiles.ProjectileTypes;
 using AfflictionClass.Content.Helper;
 using AfflictionClass.Content.Enums;
+using AfflictionClass.Content.Config;
 
 namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
 {
@@ -92,6 +93,9 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
         }
         private void ApplyAOEDebuff(int dotDamage, float radius)
         {
+            Player player = Main.player[Projectile.owner];
+            int playerID = player.whoAmI;
+
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
@@ -100,23 +104,28 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
                     float dist = Vector2.Distance(target.Center, Projectile.Center);
                     if (dist <= radius)
                     {
-                        if (target.HasBuff<CorrosiveDebuff>())
+                        var aff = target.GetGlobalNPC<AfflictionGlobalNPC>();
+                        var dotMap = aff.CorrosiveNPCData.CorrosiveDOTs;
+
+                        if (!dotMap.TryGetValue(playerID, out var dot))
                         {
-                            if (target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveStack < 10)
+                            dotMap[playerID] = new CorrosiveDOTInstance(playerID, dotDamage)
                             {
-                                target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveStack += 1;
-                            }
-                        } 
-                        
-                        target.GetGlobalNPC<AfflictionGlobalNPC>().CorrosiveNPCData.corrosiveDebuffDamage = dotDamage;
-                        target.AddBuff(ModContent.BuffType<CorrosiveDebuff>(), 300);
-                        
-                        target.SimpleStrikeNPC(1, 0, false, default);
+                                TimeLeft = AfflictionConstants.CorrosiveBaseDuration
+                            };
+                        }
+                        else
+                        {
+                            dot.BaseDamage = dotDamage;
+                            dot.Stack = Math.Min(dot.Stack + 1, AfflictionConstants.CorrosiveMaxStacks);
+                        }
+
+                        target.AddBuff(ModContent.BuffType<CorrosiveDebuff>(), AfflictionConstants.CorrosiveBaseDuration);
                     }
                 }
             }
         }
-       
+
         private void SpawnImpactVisuals()
         {
             for (int i = 0; i < 12; i++)
