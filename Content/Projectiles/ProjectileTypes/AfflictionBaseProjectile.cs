@@ -11,5 +11,6 @@ namespace AfflictionClass.Content.Projectiles.ProjectileTypes
     public abstract class AfflictionBaseProjectile : ModProjectile
     {
         public virtual DamageTypeEnum DamageType { get; set; } = DamageTypeEnum.Generic;
+        public virtual bool SuppressVanillaDamage => true;
     }
 }

@@ -67,10 +67,16 @@ namespace AfflictionClass.Content.Buffs.Void
             if (!player.active || player.dead)
                 return;
 
-            NPC.HitInfo hitInfo = npc.CalculateHitInfo(damage, 0, false, 0f);
-            hitInfo.HideCombatText = true; // hide default text, show custom one
-            npc.SimpleStrikeNPC( hitInfo.Damage, hitInfo.HitDirection, false);
+            NPC.HitInfo hitInfo = new NPC.HitInfo
+            {
+                Damage = damage, // YOUR pre-processed value (already includes armor, amp, crit, etc)
+                Knockback = 0f,
+                HitDirection = npc.Center.X > player.Center.X ? 1 : -1,
+                Crit = false,
+                HideCombatText = true
+            };
 
+            npc.StrikeNPC(hitInfo);
 
             // 💜 Purple custom damage text
             CombatText.NewText(npc.Hitbox, new Microsoft.Xna.Framework.Color(255, 50, 255), "Void Burst: " + hitInfo.Damage.ToString(), dramatic: true);

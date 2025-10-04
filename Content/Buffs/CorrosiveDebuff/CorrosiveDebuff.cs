@@ -13,6 +13,7 @@ using static System.Net.Mime.MediaTypeNames;
 using AfflictionClass.Content.Buffs.Amp;
 using AfflictionClass.Content.Helper;
 using AfflictionClass.Content.Config;
+using Microsoft.Xna.Framework;
 
 
 namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
@@ -28,7 +29,7 @@ namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
         }
 
         public override void Update(NPC npc, ref int buffIndex)
-        {
+        {               
             var aff = npc.GetGlobalNPC<AfflictionGlobalNPC>();
 
             // Only do damage server-side
@@ -82,19 +83,28 @@ namespace AfflictionClass.Content.Buffs.CorrosiveDebuff
         public static void DoDotDamage(NPC npc, int damage, int playerID)
         {
             Player player = Main.player[playerID];
+            if (!player.active || player.dead) return;
+            var affPlayer = player.GetModPlayer<AfflictionPlayer>();
+            var corrosiveMod = affPlayer.GetDamageModifiers(DamageTypeEnum.Corrosive);
 
-            if (!player.active || player.dead)
-                return;
+            // Roll crit using your custom helper (still gives you control over when it crits)
+            bool crit = corrosiveMod.canCrit && AfflictionCritHelper.RollCrit(player, DamageTypeEnum.Corrosive);
 
-            NPC.HitInfo hitInfo = npc.CalculateHitInfo(damage, 0, false, 0f);
+            // Let Terraria calculate final damage with armor + apply crit internally
+            NPC.HitInfo hitInfo = npc.CalculateHitInfo(damage, 0, crit, 0f);
+            hitInfo.HideCombatText = true;
 
-            hitInfo.HideCombatText = false;
+            // Apply damage
+            npc.StrikeNPC(hitInfo);
+            // Register actual post-armor damage to your DPS tracker
+            player.GetModPlayer<AfflictionPlayer>().CorrosiveDps.Register(hitInfo.Damage);
 
-            // THIS is what actually registers DPS meter damage
-            player.ApplyDamageToNPC(npc, hitInfo.Damage, hitInfo.Knockback, hitInfo.HitDirection, hitInfo.Crit);
-            //registers damage dealt
-            Main.player[playerID].GetModPlayer<AfflictionPlayer>().CorrosiveDps.Register(damage);
+            // Show custom colored combat text
+            CombatText.NewText(npc.Hitbox, hitInfo.Crit ? Color.Green : Color.DarkGreen, hitInfo.Damage, dramatic: hitInfo.Crit);
         }
+
+
+
 
 
         private float HandleCorrosiveStack(int stack)

@@ -12,6 +12,7 @@
 	  <None Remove="Content\Buffs\DebuffAgitated\AgitatedDebuff.png" />
 	  <None Remove="Content\Buffs\Void\VoidDebuff.png" />
 	  <None Remove="Content\Items\Accessories\CorrosiveEssence\CorrosiveEssence.png" />
+	  <None Remove="Content\Items\Weapons\Agitated\AgitatedSword\AgitatedSword.png" />
 	  <None Remove="Content\Items\Weapons\flaskattempt\CorrosiveVial.png" />
 	  <None Remove="Content\Projectiles\FlaskAttemptProjectile\CorrosiveVialProjectile.png" />
 	</ItemGroup>

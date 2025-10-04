@@ -51,12 +51,19 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
         }
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.FinalDamage.Flat = -99999f; // Nullify contact damage
+            modifiers.FinalDamage.Base = 0;
+            modifiers.FinalDamage.Flat = -9999;
+            modifiers.DisableCrit();
+            modifiers.HideCombatText(); // Now truly suppresses number
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-        //    Main.NewText("Hit registered!", Color.LightGreen);
+            //    Main.NewText("Hit registered!", Color.LightGreen);
+            if (SuppressVanillaDamage && damageDone > 0)
+            {
+                target.life += damageDone;
+            }
 
         }
         public override void AI()
@@ -118,8 +125,10 @@ namespace AfflictionClass.Content.Projectiles.FlaskAttemptProjectile
                         {
                             dot.BaseDamage = dotDamage;
                             dot.Stack = Math.Min(dot.Stack + 1, AfflictionConstants.CorrosiveMaxStacks);
-                        }
 
+                            // 🔥 Fix: Refresh TimeLeft on re-hit
+                            dot.TimeLeft = AfflictionConstants.CorrosiveBaseDuration;
+                        }
                         target.AddBuff(ModContent.BuffType<CorrosiveDebuff>(), AfflictionConstants.CorrosiveBaseDuration);
                     }
                 }

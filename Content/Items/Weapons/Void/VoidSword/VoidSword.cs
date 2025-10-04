@@ -11,12 +11,14 @@ using Microsoft.Xna.Framework;
 
 namespace AfflictionClass.Content.Items.Weapons.Void.VoidSword
 {
-    public class VoidSword : ModItem
+    public class VoidSword : AfflictionWeapon
     {
+        public override DamageTypeEnum DamageType { get; set; } = DamageTypeEnum.Void;
+        public override int BaseDamage => 10;
 
         public override void SetDefaults()
         {
-            Item.damage = 1;
+            Item.damage = 1; //not used but must be 1 for weapon to effect anything
             Item.DamageType = DamageClass.Melee/* tModPorter Suggestion: Consider MeleeNoSpeed for no attack speed scaling */;
             Item.width = 32;
             Item.height = 32;
@@ -28,26 +30,34 @@ namespace AfflictionClass.Content.Items.Weapons.Void.VoidSword
             Item.rare = 1;
             Item.UseSound = SoundID.Item1;
             Item.autoReuse = true;      
+             
+        }
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
            
         }
-
         public override void ModifyHitNPC(Player player, NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.FinalDamage *= 0;
+            modifiers.FinalDamage.Base = 0;           
+            modifiers.FinalDamage.Flat = -9999;
             modifiers.DisableCrit();
               modifiers.HideCombatText(); // Now truly suppresses number
         }
 
         public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-          
+        {           
             if (Main.myPlayer != player.whoAmI)
-                return;
-           
-
+                return;    
             if (target is null)
                 return;
-           
+
+
+
+
+            if (SuppressVanillaDamage&&damageDone>0)
+            {
+                target.life += damageDone;
+            }
             // Calculate amplify and crit (custom system)
             float amp = AfflictionHelper.GetDebuffAmplifyMultiplier(target, player, DamageTypeEnum.Void);
             bool crit = AfflictionCritHelper.RollCrit(player, DamageTypeEnum.Void);
@@ -55,8 +65,8 @@ namespace AfflictionClass.Content.Items.Weapons.Void.VoidSword
             // Get player modifiers
             var affPlayer = player.GetModPlayer<AfflictionPlayer>();
             var voidMod = affPlayer.GetDamageModifiers(DamageTypeEnum.Void);
-
-            int baseVoidDamage = (int)(10 * voidMod.damagePercent + voidMod.flatDamage);
+            //modified base weapon damage
+            int baseVoidDamage = (int)(BaseDamage * voidMod.damagePercent + voidMod.flatDamage);
            
             // Try applying void stack and checking explosion
             AfflictionHelper.AddVoidStackAndCheckExplosion(target, player, baseVoidDamage, crit, amp);

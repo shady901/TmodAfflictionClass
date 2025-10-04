@@ -1,5 +1,6 @@
 ﻿using AfflictionClass.Content.Buffs.CorrosiveDebuff;
 using AfflictionClass.Content.Config;
+using AfflictionClass.Content.Helper;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -100,15 +101,15 @@ namespace AfflictionClass.Content.NPCs
         public ulong LastHitTime;
         public List<VoidStackEntry> Stacks = new();
 
-        public VoidDOTInstance(int playerID, int baseDamage, bool crit, float amp, float critMultiplier, int npcDefence, int voidPen)
+        public VoidDOTInstance(int playerID, int baseDamage, bool crit, float amp,  int npcDefence, int voidPen)
         {
             PlayerID = playerID;
-            AddStack(baseDamage, crit, amp, critMultiplier, npcDefence, voidPen);
+            AddStack(baseDamage, crit, amp,  npcDefence, voidPen);
         }
 
-        public int AddStack(int baseDamage, bool crit, float amp, float critMultiplier, int npcDefence, int voidPen)
+        public int AddStack(int baseDamage, bool crit, float amp,  int npcDefence, int voidPen)
         {
-            var result = new VoidStackEntry(baseDamage, crit, amp, critMultiplier,npcDefence,voidPen);
+            var result = new VoidStackEntry(baseDamage, crit, amp, npcDefence,voidPen);
             Stacks.Add(result);
             LastHitTime = Main.GameUpdateCount;
             return result.FinalDamage;
@@ -127,14 +128,13 @@ namespace AfflictionClass.Content.NPCs
     {
         public int FinalDamage;
 
-        public VoidStackEntry(int baseDamage, bool crit, float amp, float critMultiplier,int npcDefence, int voidPen)
+        public VoidStackEntry(int baseDamage, bool crit, float amp, int npcDefence, int voidPen)
         {
             float dmg = baseDamage * amp;
             if (crit)
-                dmg *= critMultiplier;
-
-            float effectiveDef = Math.Max(0, npcDefence - voidPen);
-            dmg -= effectiveDef * 0.5f;
+                dmg *= 2;
+           dmg = AfflictionHelper.ApplyArmorToValue(npcDefence, voidPen, (int)dmg);
+          
 
             FinalDamage = Math.Max(1, (int)dmg);
         }

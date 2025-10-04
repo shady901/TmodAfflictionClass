@@ -10,6 +10,9 @@ using Terraria.ID;
 using AfflictionClass.Content.Buffs.Void;
 using AfflictionClass.Content.Config;
 using System;
+using Terraria.GameContent;
+using System.Linq;
+
 
 namespace AfflictionClass.Content.Helper
 {
@@ -47,30 +50,34 @@ namespace AfflictionClass.Content.Helper
 
             return tickRate;
         }
+        public static int ApplyArmorToValue(int npcDefence, int pen,int totalDamage)
+        {
+            float effectiveDef = Math.Max(0, npcDefence - pen);
+           return totalDamage -= (int)(effectiveDef * 0.5f);
 
+        }
         public static void AddVoidStackAndCheckExplosion(NPC npc, Player player, int baseDamage, bool forceCrit = false, float ampOverride = -1f)
         {
             var aff = npc.GetGlobalNPC<AfflictionGlobalNPC>();
             var dotMap = aff.voidNPCData.VoidDOTs;
-
+            int stackvalue = 0;
             // Determine amp and crit
             float amp = ampOverride > 0 ? ampOverride : AfflictionHelper.GetDebuffAmplifyMultiplier(npc, player, DamageTypeEnum.Void);
             bool crit = forceCrit || AfflictionCritHelper.RollCrit(player, DamageTypeEnum.Void);
-            float critMulti = AfflictionCritHelper.GetCritMultiplier(player, DamageTypeEnum.Void);
             int voidpen = AfflictionHelper.GetPen(player, DamageTypeEnum.Void);
-            
+
             if (!dotMap.TryGetValue(player.whoAmI, out var dot))
             {
-                dot = new VoidDOTInstance(player.whoAmI, baseDamage, crit, amp, critMulti, npc.defense, voidpen);
+                dot = new VoidDOTInstance(player.whoAmI, baseDamage, crit, amp,  npc.defense, voidpen);
                 dotMap[player.whoAmI] = dot;
+                stackvalue = dot.Stacks.Last().FinalDamage; // Grab the damage just added
+            }
+            else
+            {
+                stackvalue = dot.AddStack(baseDamage, crit, amp,  npc.defense, voidpen);
             }
 
-            var stackvalue = dot.AddStack(baseDamage, crit, amp, critMulti, npc.defense,voidpen);
-           
-         
             int totalDamage = dot.GetTotalDamage();
-            float effectiveDef = Math.Max(0, npc.defense - voidpen);
-            totalDamage -= (int)(effectiveDef * 0.5f);
             if (totalDamage >= npc.life)
             {
                 // 💥 Instant kill

@@ -19,31 +19,7 @@ namespace AfflictionClass.Content.Helper
             return Main.rand.NextFloat() < totalCrit * 0.01f;
         }
 
-        // Returns the crit multiplier (custom if available)
-        public static float GetCritMultiplier(Player player, DamageTypeEnum type)
-        {
-            var afflictionPlayer = player.GetModPlayer<AfflictionPlayer>();
-            var mod = afflictionPlayer.GetDamageModifiers(type);
-            return mod.critMulti;
-        }
-
-        // Optional: DoT version
-        public static bool RollDotCrit(Player player, DamageTypeEnum type)
-        {
-            var afflictionPlayer = player.GetModPlayer<AfflictionPlayer>();
-            var mod = afflictionPlayer.GetDamageModifiers(type);
-
-            if (!mod.dotCanCrit)
-                return false;
-
-            return Main.rand.NextFloat() < mod.dotCritChance * 0.01f;
-        }
-
-        public static float GetDotCritMultiplier(Player player, DamageTypeEnum type)
-        {
-            var afflictionPlayer = player.GetModPlayer<AfflictionPlayer>();
-            var mod = afflictionPlayer.GetDamageModifiers(type);
-            return mod.dotCritMultiplier;
-        }
+       
+      
     }
 }

@@ -18,10 +18,11 @@ namespace AfflictionClass.Content.Items.Weapons.flaskattempt
     public class CorrosiveVial : AfflictionWeapon
     {
         public override DamageTypeEnum DamageType { get; set; } = DamageTypeEnum.Corrosive;
+        public override int BaseDamage => 10;
 
         public override void SetDefaults()
         {
-            Item.damage = 10;
+            Item.damage = BaseDamage;
             Item.DamageType = ModContent.GetInstance<AfflictionDamageClass>();
             Item.autoReuse = true;
             Item.shootSpeed = 10f;

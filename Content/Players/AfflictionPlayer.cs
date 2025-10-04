@@ -88,15 +88,12 @@ namespace AfflictionClass.Content.Players
 
         // Crit system
         public float critChance = 0f;       // Custom crit chance (added on top of vanilla)
-        public float critMulti = 2f;        // Custom crit multiplier (default 2x like vanilla)
-        public bool useCustomCrit = false;  // If true, overrides vanilla crit system (optional)
-
+       
         // DoT properties
         public float dotScalingPercent = 1f;      // DoT total scaling
         public float dotTickRatePercent = 1f;     // Speed of dot ticks
         public float dotCritChance = 0f;          // Crit chance for DoT
-        public bool dotCanCrit = false;           // Can DoT crit?
-        public float dotCritMultiplier = 1.5f;     // Multiplier for DoT crits
+        public bool canCrit = false;
 
         // Debuff synergy
         public float debuffAmplifyPercent = 1f;   // Amplifies debuff damage
@@ -110,14 +107,11 @@ namespace AfflictionClass.Content.Players
             damagePercent = 1f;
             flatDamage = 0f;
             critChance = 0f;
-            critMulti = 2f;
-            useCustomCrit = false;
-
+         
             dotScalingPercent = 1f;
             dotTickRatePercent = 1f;
             dotCritChance = 0f;
-            dotCanCrit = false;
-            dotCritMultiplier = 1.5f;
+            canCrit = false;         
 
             debuffAmplifyPercent = 1f;
             tickRateGlobalMultiplier = 1f;
